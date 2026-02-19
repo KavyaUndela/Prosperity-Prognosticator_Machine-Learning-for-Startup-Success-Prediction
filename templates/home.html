@@ -453,12 +453,15 @@
             submitButton.innerHTML = '⏳ Analyzing...';
             submitButton.disabled = true;
             
-            // Convert checkbox values
+            // Create hidden fields for unchecked checkboxes
             const checkboxes = document.querySelectorAll('input[type="checkbox"]');
             checkboxes.forEach(checkbox => {
                 if (!checkbox.checked) {
-                    checkbox.value = '0';
-                    checkbox.checked = true;
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = checkbox.name;
+                    hiddenInput.value = '0';
+                    this.appendChild(hiddenInput);
                 }
             });
         });
@@ -484,6 +487,16 @@
                 this.style.transform = 'translateY(0)';
                 this.style.boxShadow = 'none';
             });
+        });
+
+        // Form validation
+        document.getElementById('predictionForm').addEventListener('submit', function(e) {
+            const fundingRounds = document.getElementById('funding_rounds').value;
+            const milestones = document.getElementById('milestones').value;
+            
+            if (fundingRounds === '' && milestones === '') {
+                console.warn('Consider entering at least some funding or milestone data for better predictions');
+            }
         });
     </script>
 </body>

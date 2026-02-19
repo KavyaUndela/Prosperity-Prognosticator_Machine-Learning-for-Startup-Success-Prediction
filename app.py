@@ -42,7 +42,7 @@ def predict():
         features = []
         for feature in FEATURE_NAMES:
             value = request.form.get(feature, 0)
-            if value == '':
+            if value == '' or value is None:
                 value = 0
             features.append(float(value))
         
@@ -74,7 +74,7 @@ def predict():
             'color_class': color_class
         }
 
-        # 🔥 Add input data mapping here for use in results.html
+        # Add input data mapping here for use in results.html
         result['input_data'] = dict(zip(FEATURE_NAMES, features))
 
         return render_template('results.html', result=result)
@@ -104,5 +104,13 @@ def api_predict():
 def adaptivity():
     return render_template('adaptivity.html')
 
+@app.errorhandler(404)
+def not_found(error):
+    return render_template('index.html'), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({'error': 'Internal server error'}), 500
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='127.0.0.1', port=5000)
