@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 from flask import Flask, render_template, request, jsonify
 import joblib
@@ -8,8 +9,13 @@ BASE_DIR = Path(__file__).resolve().parent
 
 app = Flask(__name__, template_folder=str(BASE_DIR / 'templates'))
 
-# Load the trained model
-model = joblib.load(BASE_DIR / 'random_forest_model.pkl')
+# Load the trained model without crashing app import on deployment.
+try:
+    model = joblib.load(BASE_DIR / 'random_forest_model.pkl')
+    model_load_error = None
+except Exception as exc:
+    model = None
+    model_load_error = str(exc)
 
 # Feature names in the exact order expected by the model
 FEATURE_NAMES = [
@@ -41,6 +47,9 @@ def home():
 def predict():
     if request.method == 'GET':
         return render_template('home.html')
+
+    if model is None:
+        return render_template('results.html', error=f"Model unavailable: {model_load_error}")
     
     try:
         features = []
@@ -89,6 +98,9 @@ def predict():
 @app.route('/api/predict', methods=['POST'])
 def api_predict():
     try:
+        if model is None:
+            return jsonify({'error': f'Model unavailable: {model_load_error}'}), 500
+
         data = request.json
         features = [data.get(feature, 0) for feature in FEATURE_NAMES]
         feature_array = np.array(features).reshape(1, -1)
@@ -117,4 +129,5 @@ def internal_error(error):
     return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
