@@ -1,11 +1,15 @@
+from pathlib import Path
+
 from flask import Flask, render_template, request, jsonify
 import joblib
 import numpy as np
 
-app = Flask(__name__)
+BASE_DIR = Path(__file__).resolve().parent
+
+app = Flask(__name__, template_folder=str(BASE_DIR / 'templates'))
 
 # Load the trained model
-model = joblib.load('random_forest_model.pkl')
+model = joblib.load(BASE_DIR / 'random_forest_model.pkl')
 
 # Feature names in the exact order expected by the model
 FEATURE_NAMES = [
